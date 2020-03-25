@@ -24,16 +24,16 @@ protocol Url {
 }
 
 // structure to construct custom complex url if any
-struct RestUrl: Url {
+struct RestUrl {//: Url {
   
-  var scheme: String
-  var host: String
-  var path: String
-  
+//  var scheme: String
+//  var host: String
+//  var path: String
+  var api: String;
   /// returns the rest url, this can be customised based on query complex
   var url: Any? {
     get {
-      let apiUrl: String? = scheme+"://" + host + path
+      let apiUrl: String? = api
       if let urlStr = apiUrl {
           if let url = URL(string: urlStr) {
               return url

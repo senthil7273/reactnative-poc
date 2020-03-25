@@ -10,7 +10,7 @@ import Foundation
 
 @objc
 public protocol ResponseHandler: class {
-  func requestSucceed(response responseData:Data)
+  func requestSucceed(response responseData: [Any])
   func requestFailed(statusCode: Int, description: String)
 }
 
@@ -42,22 +42,23 @@ struct SessionConfig {
   @objc func getData(withURL urlParams:Dictionary<String, Any> , auth:String, withDescription strDescription:String) {
     
     var urlBuilder: RestUrl?
-    if let host = urlParams["host"], let scheme = urlParams["scheme"], let api = urlParams["api"] {
-      urlBuilder  = RestUrl(scheme: scheme as! String,
-                            host: host as! String,
-                            path: api as! String)
+    if let url: String = urlParams["url"] as? String {
+      urlBuilder = RestUrl(api: url)
     } else {
         let error: NSError = NSError()
        self.responseHandler?.requestFailed(statusCode: (error as NSError).code, description: "Url params missing")
     }
+    print("coming here \(String(describing: urlBuilder?.api))")
     if let restUrl: URL = urlBuilder?.url as? URL {
       let session = URLSession(configuration: SessionConfig.config(), delegate: self, delegateQueue: nil)
       let task = session.dataTask(with: restUrl, completionHandler: { data, response, error in
         if error != nil {
           self.responseHandler?.requestFailed(statusCode: (error! as NSError).code, description: error.debugDescription)
         } else {
-          if let res = data{
-            self.responseHandler?.requestSucceed(response: res)
+          if let res = data {
+            let players = self.parseJsonData(data: res)
+            print("name is  \(players[0].name)")
+            self.responseHandler?.requestSucceed(response: players)
           }
         }
       })
@@ -65,6 +66,29 @@ struct SessionConfig {
     }
   }
   
+  
+  func parseJsonData(data: Data) -> [Player] {
+    
+      var players = [Player]()
+      do {
+          let jsonResult = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.mutableContainers) as? NSDictionary
+          let gamers = jsonResult?["data"] as! [AnyObject]
+          for gamer in gamers {
+            let player = Player()
+            player.id = gamer["id"] as? String
+            player.age = gamer["employee_age"] as? String
+            player.name = gamer["employee_name"] as? String
+            player.salary = gamer["employee_salary"] as? String
+            player.image = gamer["profile_image"] as? String
+            players.append(player)
+          }
+      } catch {
+        print("error is \(error.localizedDescription)")
+      }
+      return players
+  }
+  
+  //  Desctructor
   deinit {
   }
   
