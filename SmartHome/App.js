@@ -29,24 +29,22 @@ export default class App extends Component {
       isLoading: false,
      }
   }
-  _getDevice() {
-    var deviceManager = NativeModules.DeviceManager;
-    deviceManager.getDevices('tv');
-  }
+
   async _getPlayers() {
-    var deviceManager = NativeModules.DeviceManager;
+    var player = NativeModules.PlayerService;
+    this.setState({isLoading: true});
     try {
-      var host = "dummy.restapiexample.com"
-      var scheme = "http"
-      var api= "/api/v1/employees"
-      var response = await deviceManager.getData({"host":host, "scheme": scheme, "api": api});
-      if (response && response.status == "success") {
-        this.setState({playerList: response.data})
+      var api = "http://dummy.restapiexample.com/api/v1/employees"
+      var response = await player.getData({url: api});
+      if (response != null) {
+        this.setState({playerList: JSON.parse(response)})
       } else {
-        alert("Error in getting data")
+        alert("Error in getting data "+response)
       }
     } catch(e) {
       alert("error is "+e)
+    } finally {
+      this.setState({isLoading: false});
     }
   }
 
@@ -56,9 +54,9 @@ export default class App extends Component {
       <Container>
         <PlayerHeader/>
      <Content>
-      {this.state.isLoading && <SpinnerAnimator></SpinnerAnimator>} 
+      {this.state.isLoading == true && <SpinnerAnimator></SpinnerAnimator>} 
        <List dataArray={this.state.playerList} renderRow ={
-         (item) => {return(<ListItem><Text>{item.employee_name}</Text></ListItem>)}
+         (item) => {return(<ListItem><Text>{item.name}</Text></ListItem>)}
        }/>
      </Content>
      <Footer>
